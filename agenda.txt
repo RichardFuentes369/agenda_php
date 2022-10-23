@@ -1,0 +1,66 @@
+    // http://nexura.test/loader.php?lServicio=Procesos&lTipo=rentas&lFuncion=horarios&start=2022-10-21&days=5&tiempo=15
+ 
+    public function horarios(){
+        // aqui se almacenaran los dias no laborados (festivos, navidades, eventos etc)
+        $diasNoLaborados = array();
+
+        // aqui se almacenara el horario de atencion de la oficina a la cual se pretende gestionar
+        $horarioAtencion = array(
+            // la semana inicia en domingo = 0
+            // lunes = 1
+            (object) array('dia' => 1, 'jornada' => 'manana', 'start' => '07:00:00', 'end' => '12:00:00'),
+            (object) array('dia' => 1, 'jornada' => 'tarde', 'start' => '13:30:00', 'end' => '16:00:00'),
+            //martes = 2
+            (object) array('dia' => 2, 'jornada' => 'manana', 'start' => '07:00:00', 'end' => '12:00:00'),
+            (object) array('dia' => 2, 'jornada' => 'tarde', 'start' => '13:30:00', 'end' => '16:00:00'),
+            //miercoles = 3
+            (object) array('dia' => 3, 'jornada' => 'manana', 'start' => '07:00:00', 'end' => '12:00:00'),
+            (object) array('dia' => 3, 'jornada' => 'tarde', 'start' => '14:00:00', 'end' => '16:00:00'),
+            //juebes = 4
+            (object) array('dia' => 4, 'jornada' => 'manana', 'start' => '07:00:00', 'end' => '12:00:00'),
+            (object) array('dia' => 4, 'jornada' => 'tarde', 'start' => '13:30:00', 'end' => '16:00:00'),
+            //viernes = 5
+            (object) array('dia' => 5, 'jornada' => 'manana', 'start' => '07:00:00', 'end' => '12:00:00'),
+            (object) array('dia' => 5, 'jornada' => 'tarde', 'start' => '15:00:00', 'end' => '16:00:00'),
+            //sabado = 6
+            (object) array('dia' => 6, 'jornada' => 'manana', 'start' => '07:00:00', 'end' => '12:00:00'),
+        );
+
+        // este sera un arreglo con los datos de fecha de inicio, agenda por dias, lapso de tiempo por cita y la fecha final la cual sera calculada
+        // dependiendo de la fecha de inicio y dias 
+        $datosNegocio = array(
+            'fechaInicio' => $_GET['start'],
+            'agendaPorDias' => $_GET['days'],
+            'lapsoTiempo' => $_GET['tiempo'],
+            'fechaFinal' => date("Y-m-d",strtotime($_GET['start']."+".$_GET['days']."days"))
+        );
+        
+        // aqui se almacenaran las fechas que hay dentro del rango dependiendo de la fecha de inicio y el rango de dias
+        $fechas_rango_start_end = array();
+
+        for($i = strtotime($datosNegocio['fechaInicio']); $i <= strtotime($datosNegocio['fechaFinal']); $i+=86400){
+            array_push($fechas_rango_start_end, date("d-m-Y", $i));
+        }
+        
+        $fecha_con_horario = array();
+        
+        // vamos a calcular y a insertar en bd las citas por dia
+        for($i = 0; $i < sizeof($fechas_rango_start_end); $i++){
+            $fechaIntervenir = strtotime($fechas_rango_start_end[$i]); //fecha
+            $diaDeLaSemana = date("w", $fechaIntervenir); // #dia
+
+            foreach ($horarioAtencion as $key => $objeto) {
+                if ($objeto->dia == $diaDeLaSemana) {
+                    $horarioMananaTarde[] = $objeto;
+                }
+            }
+
+            array_push($fecha_con_horario, ["fecha" => $fechas_rango_start_end[$i],"dia" => $diaDeLaSemana, "horario" => [$horarioMananaTarde]]);
+            $horarioMananaTarde = array();
+        }
+
+
+        
+        print_r(json_encode($fecha_con_horario));
+        die();
+    }
